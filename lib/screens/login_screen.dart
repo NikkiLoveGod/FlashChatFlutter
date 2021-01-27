@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/components/round_button.dart';
 import 'package:flash_chat/constants.dart';
+import 'package:flash_chat/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,6 +12,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String email;
+  String password;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               onChanged: (value) {
-                //Do something with the user input.
+                this.email = value;
               },
               decoration: kTextFieldDecoration.copyWith(
                 hintText: 'Enter your email',
@@ -50,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               obscureText: true,
               onChanged: (value) {
-                //Do something with the user input.
+                this.password = value;
               },
               decoration: kTextFieldDecoration.copyWith(
                 hintText: 'Enter your password.',
@@ -66,8 +72,20 @@ class _LoginScreenState extends State<LoginScreen> {
               tag: 'login-btn',
               child: RoundedButton(
                 color: Colors.lightBlueAccent,
-                onPressed: () {
-                  //Implement login functionality.
+                onPressed: () async {
+                  try {
+                    final user = await this._auth.signInWithEmailAndPassword(
+                          email: this.email,
+                          password: this.password,
+                        );
+                    if (user != null) {
+                      return Navigator.pushNamed(context, ChatScreen.id);
+                    }
+
+                    print('signin is null');
+                  } catch (e) {
+                    print(e);
+                  }
                 },
                 text: 'Log In',
               ),

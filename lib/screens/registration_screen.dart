@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/components/round_button.dart';
+import 'package:flash_chat/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../constants.dart';
@@ -11,6 +13,28 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String email;
+  String password;
+
+  Future register() async {
+    try {
+      final user = await this._auth.createUserWithEmailAndPassword(
+            email: this.email,
+            password: this.password,
+          );
+
+      if (user != null) {
+        return Navigator.pushNamed(context, ChatScreen.id);
+      }
+
+      print('createUserWithEmailAndPassword returns null');
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +59,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               onChanged: (value) {
-                //Do something with the user input.
+                this.email = value;
               },
               decoration: kTextFieldDecoration.copyWith(
                 hintText: 'Enter your email',
@@ -51,7 +75,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               textAlign: TextAlign.center,
               obscureText: true,
               onChanged: (value) {
-                //Do something with the user input.
+                this.password = value;
               },
               decoration: kTextFieldDecoration.copyWith(
                 hintText: 'Enter your password.',
@@ -66,9 +90,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             Hero(
               tag: 'register-btn',
               child: RoundedButton(
-                onPressed: () {
-                  //Implement registration functionality.
-                },
+                onPressed: this.register,
                 color: Colors.blueAccent,
                 text: 'Register',
               ),
