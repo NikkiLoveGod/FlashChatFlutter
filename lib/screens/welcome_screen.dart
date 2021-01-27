@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 import 'login_screen.dart';
 import 'registration_screen.dart';
@@ -58,13 +59,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   tag: 'logo',
                   child: Container(
                     child: Image.asset('images/logo.png'),
-                    height: 60.0,
-                    width: 60.0,
+                    height: 80.0,
+                    width: 80.0,
                   ),
                 ),
-                Text(
-                  'Flash Chat',
-                  style: TextStyle(
+                TypewriterAnimatedTextKit(
+                  text: ['Flash Chat'],
+                  speed: Duration(milliseconds: 100),
+                  textStyle: TextStyle(
+                    color: Colors.black87,
                     fontSize: 45.0,
                     fontWeight: FontWeight.w900,
                   ),
