@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
+final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
 class ChatScreen extends StatefulWidget {
   static const String id = 'chat_screen';
 
@@ -14,7 +16,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  var messageStream = _firestore.collection('messages').snapshots();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User loggedInUser;
@@ -61,8 +63,7 @@ class _ChatScreenState extends State<ChatScreen> {
       this.isLoading = true;
     });
     try {
-      await this
-          ._firestore
+      await _firestore
           .collection('messages')
           .add({'text': this.message, 'sender': this._auth.currentUser.email});
     } catch (e) {
@@ -94,6 +95,28 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: messageStream,
+                  builder: (context, snapshot) {
+                    List<Widget> messages = [];
+                    if (snapshot.hasData) {
+                      snapshot.data.docs.forEach(
+                        (DocumentSnapshot s) {
+                          print(s);
+                          messages.add(
+                            Text(s['text']),
+                          );
+                        },
+                      );
+                    }
+
+                    return Column(
+                      children: messages,
+                    );
+                  },
+                ),
+              ),
               Container(
                 decoration: kMessageContainerDecoration,
                 child: Row(
