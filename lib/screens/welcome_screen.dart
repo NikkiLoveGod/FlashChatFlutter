@@ -1,9 +1,6 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flash_chat/components/round_button.dart';
 import 'package:flutter/material.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import 'login_screen.dart';
 import 'registration_screen.dart';
