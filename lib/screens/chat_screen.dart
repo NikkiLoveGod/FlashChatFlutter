@@ -5,6 +5,7 @@ import 'package:flash_chat/constants.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+User loggedInUser;
 
 class ChatScreen extends StatefulWidget {
   static const String id = 'chat_screen';
@@ -17,7 +18,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final TextEditingController messageFieldController = TextEditingController();
-  User loggedInUser;
   bool isLoading = false;
   String message;
 
@@ -32,7 +32,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final user = this._auth.currentUser;
 
       if (user != null) {
-        this.loggedInUser = user;
+        loggedInUser = user;
         print(loggedInUser.email);
       }
     } catch (e) {
@@ -64,6 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await _firestore.collection('messages').add({
         'text': this.message,
         'sender': this._auth.currentUser.email,
+        'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
       print(e);
@@ -134,23 +135,30 @@ class MessageStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('messages').snapshots(),
+      stream: _firestore
+          .collection('messages')
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return CircularProgressIndicator();
         }
 
-        var messagesBubbles = List.of(snapshot.data.docs.map<Widget>(
-          (DocumentSnapshot message) => MessageBubble(
+        List<MessageBubble> messageBubbles = [];
+
+        for (DocumentSnapshot message in snapshot.data.docs) {
+          messageBubbles.add(MessageBubble(
             text: message['text'],
             sender: message['sender'],
-          ),
-        ));
+            isMe: message['sender'] == loggedInUser?.email ?? "",
+          ));
+        }
 
         return Expanded(
           child: ListView(
-            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-            children: messagesBubbles,
+            reverse: true,
+            padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 20),
+            children: messageBubbles,
           ),
         );
       },
@@ -159,14 +167,20 @@ class MessageStream extends StatelessWidget {
 }
 
 class MessageBubble extends StatelessWidget {
-  MessageBubble({@required this.text, @required this.sender});
+  MessageBubble({
+    @required this.text,
+    @required this.sender,
+    @required this.isMe,
+  });
   final String text;
   final String sender;
+  final bool isMe;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment:
+          isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(
           this.sender,
@@ -176,11 +190,23 @@ class MessageBubble extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 10.0),
+          padding: EdgeInsets.symmetric(vertical: 6.0),
           child: Material(
             elevation: 5.0,
-            borderRadius: BorderRadius.circular(30.0),
-            color: Colors.lightBlueAccent,
+            borderRadius: isMe
+                ? BorderRadius.only(
+                    topRight: Radius.circular(3.0),
+                    topLeft: Radius.circular(30.0),
+                    bottomLeft: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0),
+                  )
+                : BorderRadius.only(
+                    topLeft: Radius.circular(3.0),
+                    topRight: Radius.circular(30.0),
+                    bottomLeft: Radius.circular(30.0),
+                    bottomRight: Radius.circular(30.0),
+                  ),
+            color: isMe ? Colors.lightBlueAccent : Colors.white,
             child: Padding(
               padding: EdgeInsets.symmetric(
                 vertical: 10.0,
@@ -190,14 +216,14 @@ class MessageBubble extends StatelessWidget {
                 this.text,
                 style: TextStyle(
                   fontSize: 15.0,
-                  color: Colors.white,
+                  color: isMe ? Colors.white : Colors.black54,
                 ),
               ),
             ),
           ),
         ),
         SizedBox(
-          height: 10.0,
+          height: 15.0,
         ),
       ],
     );
